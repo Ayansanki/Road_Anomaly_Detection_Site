@@ -3,7 +3,7 @@ numpy==1.26.4
 opencv-python==4.7.0.68
 ultralytics==8.3.176
 torch
-pandas==1.5.1
 gunicorn==23.0.0
 plotly==5.24.1
+
 
