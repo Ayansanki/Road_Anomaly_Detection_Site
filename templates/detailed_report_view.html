@@ -1,0 +1,333 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Road Anomaly Detection - View Reports</title>
+
+    <link name="bootstrap" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.6/dist/css/bootstrap.min.css"
+        rel="stylesheet" integrity="sha384-4Q6Gf2aSP4eDXB8Miphtr37CMZZQ5oXLH2yaXMJ2w8e2ZtHTl7GptT4jmndRuHDT"
+        crossorigin="anonymous">
+
+    <link rel="stylesheet" href="../static/nav-style.css">
+    <style>
+        .table-hover tbody tr {
+            cursor: pointer;
+        }
+
+        .truncate-text {
+            white-space: nowrap;
+            /* Prevents text from wrapping to the next line */
+            overflow: hidden;
+            /* Hides any content that overflows the element's box */
+            text-overflow: ellipsis;
+            /* Displays an ellipsis (...) to indicate truncated text */
+            max-width: 100px;
+            /* Or a character unit like 'ch' for character-based width */
+        }
+
+        /* Custom styles to define the FAB's size and roundness */
+        .fab-button {
+            /* Bootstrap fixed-bottom and fixed-end position it */
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            z-index: 1050;
+            /* Ensure it stays above modals/navs */
+
+            /* Sizing and Shape */
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            /* Makes it perfectly round */
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+
+            /* Center the icon */
+            display: flex;
+            align-items: center;
+            justify-content: center;
+
+            /* Remove default button appearance */
+            padding: 0;
+        }
+
+        #top {
+            display: block;
+            position: relative;
+            top: -70px;
+            /* Offset for fixed navigation bar/padding if one existed */
+        }
+    </style>
+    <!-- <script src="../static/plotly-latest.min.js"></script> -->
+    <script src='https://cdn.plot.ly/plotly-3.2.0.min.js'></script>
+</head>
+
+<body>
+    <div id="top"></div>
+    {% include "nav.html" %}
+
+    <div class="container mt-4 mb-4">
+        <h2 id="top_heading">View Anomaly Reports</h2>
+        <p>This is where users can view previously reported road anomalies.</p>
+
+        <div class="table-responsive-wrapper">
+            <table class="table table-hover resizable-table" id="data-table">
+                <thead class="table-light">
+                    <tr>
+                        <th scope="col">Report ID <div class="resize-handle"></div>
+                        </th>
+                        <th scope="col">Anomaly Type <div class="resize-handle"></div>
+                        </th>
+                        <th scope="col">Location <div class="resize-handle"></div>
+                        </th>
+                        <th scope="col">Date Reported <div class="resize-handle"></div>
+                        </th>
+                        <th scope="col">Status <div class="resize-handle"></div>
+                        </th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <th scope="row" class="truncate-text">{{ data.pk }}</th>
+                        <td>{{ data.anomalyType }}</td>
+                        <td>{{ data.roadname }}</td>
+                        <td>{{ data.posted_at }}</td>
+                        <td>{{ data.status }}</td>
+                    </tr>
+                </tbody>
+            </table>
+
+            <script>
+                document.addEventListener('DOMContentLoaded', function () {
+                    const table = document.getElementById('data-table');
+                    const headers = table.querySelectorAll('th');
+                    const handles = table.querySelectorAll('.resize-handle');
+                    const MIN_WIDTH = 50; // Minimum column width in pixels
+
+                    let currentHeader = null;
+                    let nextHeader = null; // New variable for the column to the right
+                    let startX = 0;
+                    let startWidth = 0;
+                    let startNextWidth = 0; // New variable for the next column's starting width
+
+                    // --- 1. Attach Listeners to all Handles ---
+                    handles.forEach(handle => {
+                        handle.addEventListener('mousedown', initResize);
+                    });
+
+                    // --- 2. Start Drag ---
+                    function initResize(e) {
+                        e.preventDefault();
+
+                        currentHeader = e.target.parentElement;
+
+                        // Find the next column header (to the right)
+                        const columnIndex = Array.from(headers).indexOf(currentHeader);
+                        nextHeader = headers[columnIndex + 1];
+
+                        // If the last column's handle is dragged, we stop.
+                        if (!nextHeader) return;
+
+                        // Record the starting mouse position and the current column widths
+                        startX = e.clientX;
+                        startWidth = currentHeader.offsetWidth;
+                        startNextWidth = nextHeader.offsetWidth;
+
+                        // Add event listeners to the document for drag and release
+                        document.addEventListener('mousemove', resize);
+                        document.addEventListener('mouseup', stopResize);
+
+                        // Add class to body to prevent text selection during drag
+                        document.body.classList.add('resizing');
+                    }
+
+                    // --- 3. Perform Resize ---
+                    function resize(e) {
+                        // Ensure both columns are defined before resizing
+                        if (currentHeader && nextHeader) {
+                            const diff = e.clientX - startX;
+
+                            // Column being dragged increases by diff, next column decreases by diff
+                            let newWidth = startWidth + diff;
+                            let newNextWidth = startNextWidth - diff;
+
+                            const totalWidth = startWidth + startNextWidth;
+
+                            // --- Boundary Checks ---
+                            // 1. Check if the current column is too small
+                            if (newWidth < MIN_WIDTH) {
+                                newWidth = MIN_WIDTH;
+                                newNextWidth = totalWidth - MIN_WIDTH; // Recalculate partner's width
+                            }
+
+                            // 2. Check if the next column is too small
+                            if (newNextWidth < MIN_WIDTH) {
+                                newNextWidth = MIN_WIDTH;
+                                newWidth = totalWidth - MIN_WIDTH; // Recalculate partner's width
+                            }
+
+                            // Apply new widths to headers
+                            currentHeader.style.width = newWidth + 'px';
+                            nextHeader.style.width = newNextWidth + 'px';
+
+                            // --- Sync Widths for all cells in the column ---
+                            const currentColumnIndex = Array.from(headers).indexOf(currentHeader);
+                            const nextColumnIndex = currentColumnIndex + 1;
+                            const allRows = table.querySelectorAll('tr');
+
+                            allRows.forEach((row, rowIndex) => {
+                                // Apply width to the corresponding cell in the data rows (skipping header row 0)
+                                if (rowIndex > 0) {
+                                    // Update current column cells
+                                    const currentCell = row.children[currentColumnIndex];
+                                    if (currentCell) {
+                                        currentCell.style.width = newWidth + 'px';
+                                    }
+
+                                    // Update next column cells
+                                    const nextCell = row.children[nextColumnIndex];
+                                    if (nextCell) {
+                                        nextCell.style.width = newNextWidth + 'px';
+                                    }
+                                }
+                            });
+                        }
+                    }
+
+                    // --- 4. Stop Drag ---
+                    function stopResize() {
+                        document.removeEventListener('mousemove', resize);
+                        document.removeEventListener('mouseup', stopResize);
+                        currentHeader = null;
+                        nextHeader = null; // Reset the next header reference
+                        document.body.classList.remove('resizing');
+                    }
+                });
+            </script>
+        </div>
+
+        <div class="row justify-content-center mt-4">
+            <div class="col-md-10 col-lg-8">
+                <div class="form-floating mb-3">
+                    <input type="text" class="form-control" id="register-input" value="{{ data.register }}" readonly
+                        disabled>
+                    <label for="register-input">Register Info</label>
+                </div>
+
+                <div class="form-floating mb-3">
+                    <input type="text" class="form-control" id="report-id-input" value="{{ data.pk }}" readonly
+                        disabled>
+                    <label for="report-id-input">Report ID</label>
+                </div>
+
+                <div class="form-floating mb-3">
+                    <input type="text" class="form-control" id="date-reported-input" value="{{ data.posted_at }}"
+                        readonly disabled>
+                    <label for="date-reported-input">Date Reported</label>
+                </div>
+
+                <div class="form-floating mb-3">
+                    <input type="text" class="form-control" id="anomaly-type-input" value="{{ data.areaname }}" readonly
+                        disabled>
+                    <label for="anomaly-type-input">Area Name</label>
+                </div>
+
+                <div class="form-floating mb-3">
+                    <input type="text" class="form-control" id="pincode-input" value="{{ data.pincode }}" readonly
+                        disabled>
+                    <label for="pincode-input">Pincode</label>
+                </div>
+
+                <div class="form-floating mb-3">
+                    <input type="text" class="form-control" id="road-name-input" value="{{ data.roadname }}" readonly
+                        disabled>
+                    <label for="road-name-input">Road Name</label>
+                </div>
+
+                <div class="form-floating mb-3">
+                    <input type="text" class="form-control" id="geo-location-input"
+                        value="{{ data.geolocation.lat }}, {{ data.geolocation.lng }}" readonly disabled>
+                    <label for="geo-location-input">Geo Location</label>
+                </div>
+
+                <div class="form-floating mb-3">
+                    <input type="text" class="form-control" id="anomaly-type-input" value="{{ data.anomalyType }}"
+                        readonly disabled>
+                    <label for="anomaly-type-input">Anomaly Type</label>
+                </div>
+
+                <div class="form-floating mb-3">
+                    <input type="text" class="form-control" id="status-input" value="{{ data.status }}" readonly
+                        disabled>
+                    <label for="status-input">Status</label>
+                </div>
+
+                <div class="form-floating mb-3">
+                    <textarea class="form-control" placeholder="Leave a comment here" id="description-textarea"
+                        style="height: 100px" readonly disabled>{{ data.instructions }}</textarea>
+                    <label for="description-textarea">Description</label>
+                </div>
+
+
+
+                <div class="mb-3">
+                    <label for="image-upload" class="form-label">Anomaly Image</label><br>
+                    {% if data.anomalyImage %}
+                        <img src="/view/{{data.pk}}/image/" alt="Anomaly Image" class="img-fluid rounded">
+                    {% else %}
+                        <p>No image available.</p>
+                    {% endif %}
+                </div>
+
+                <div class="mb-3">
+                    <label for="location-map" class="form-label">Location Map</label><br>
+                    <div id="myDiv"></div>
+                    <script>
+                        var data = [{
+                            type: 'scattermap',
+                            lat: [{{ data.geolocation.lat }}],
+                            lon: [{{ data.geolocation.lng}} ],
+                        mode: 'markers',
+                            marker: {
+                            size: 14
+                        },
+                        text: ['Montreal']
+                        }]
+
+                        var layout = {
+                            autosize: true,
+                            hovermode: 'closest',
+                            map: {
+                                bearing: 0,
+                                center: {
+                                    lat: parseFloat(data[0].lat[0]),
+                                    lon: parseFloat(data[0].lon[0])
+                                },
+                                pitch: 0,
+                                zoom: 5
+                            },
+                        }
+
+                        Plotly.newPlot('myDiv', data, layout)
+                    </script>
+                </div>
+
+            </div>
+        </div>
+
+
+        <a href="#top" class="btn btn-secondary fab-button" title="Back to Top" aria-label="Scroll to top of page">
+            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-arrow-up"
+                viewBox="0 0 16 16">
+                <path fill-rule="evenodd"
+                    d="M8 15a.5.5 0 0 0 .5-.5V2.707l3.146 3.147a.5.5 0 0 0 .708-.708l-4-4a.5.5 0 0 0-.708 0l-4 4a.5.5 0 1 0 .708.708L7.5 2.707V14.5a.5.5 0 0 0 .5.5" />
+            </svg>
+        </a>
+
+        <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"
+            integrity="sha384-YvpcrYf0tY3lHB60NNkmXc5s9fDVZLESaAA55NDzOxhy9GkcIdslK1eN7N6jIeHz"
+            crossorigin="anonymous"></script>
+</body>
+
+</html>

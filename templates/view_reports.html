@@ -1,0 +1,544 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Road Anomaly Detection - View Reports</title>
+
+    <link name="bootstrap" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.6/dist/css/bootstrap.min.css"
+        rel="stylesheet" integrity="sha384-4Q6Gf2aSP4eDXB8Miphtr37CMZZQ5oXLH2yaXMJ2w8e2ZtHTl7GptT4jmndRuHDT"
+        crossorigin="anonymous">
+
+    <link rel="stylesheet" href="../static/nav-style.css">
+
+    <style>
+        .table-hover tbody tr {
+            cursor: pointer;
+        }
+
+        .search-container {
+            position: relative;
+        }
+
+        .search-input {
+            height: 50px;
+            border-radius: 30px;
+            padding-left: 35px;
+            border: none;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+        }
+
+        .search-icon {
+            position: absolute;
+            top: 50%;
+            left: 15px;
+            transform: translateY(-50%);
+            color: #888;
+        }
+
+        .truncate-text {
+            white-space: nowrap;
+            /* Prevents text from wrapping to the next line */
+            overflow: hidden;
+            /* Hides any content that overflows the element's box */
+            text-overflow: ellipsis;
+            /* Displays an ellipsis (...) to indicate truncated text */
+            max-width: 100px;
+            /* Or a character unit like 'ch' for character-based width */
+        }
+
+
+
+
+
+        /* table css code */
+        /* Container for the table with shadow and border-radius */
+        .table-responsive-wrapper {
+            overflow-x: auto;
+            border-radius: 8px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+            /* background-color: white; */
+            padding: 10px;
+        }
+
+        /* Essential for manual resizing: ensures column widths are respected */
+        .resizable-table {
+            table-layout: fixed;
+            width: 100%;
+            min-width: 600px;
+            /* Minimum width to prevent crushing on small screens */
+        }
+
+        /* Header styling and positioning for the handle */
+        .resizable-table th {
+            position: relative;
+            /* Needed for absolute positioning of the handle */
+            /* padding: 1rem; */
+            text-align: left;
+            /* border-bottom: 2px solid #0d6efd; */
+            transition: background-color 0.2s;
+            /* Aesthetic touch */
+        }
+
+        /* The draggable separator element (the "handle") */
+        .resize-handle {
+            position: absolute;
+            top: 0;
+            right: 0;
+            width: 8px;
+            /* Width of the drag area */
+            height: 100%;
+            cursor: col-resize;
+            /* Cursor indicates resizability */
+            background: transparent;
+            /* border-right: 1px solid rgba(13, 110, 253, 0.3); */
+            z-index: 1;
+        }
+
+
+        /* Prevents text selection during the dragging process */
+        .resizing {
+            user-select: none;
+            cursor: col-resize !important;
+        }
+
+
+    </style>
+    <script src='https://cdn.plot.ly/plotly-3.2.0.min.js'></script>
+</head>
+
+<body>
+    {% include "nav.html" %}
+
+    <div class="container mt-4 mb-4">
+        <h2>View Anomaly Reports</h2>
+        <p>This is where users can view previously reported road anomalies.</p>
+        <div class="col-sm-6 col-md-5 col-lg-4 mb-3">
+            <div class="search-container">
+                <input type="text" class="form-control search-input" id="search-input" placeholder="Search...">
+                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor"
+                    class="bi bi-search search-icon" viewBox="0 0 16 16">
+                    <path
+                        d="M11.742 10.344a6.5 6.5 0 1 0-1.397 1.398h-.001q.044.06.098.115l3.85 3.85a1 1 0 0 0 1.415-1.414l-3.85-3.85a1 1 0 0 0-.115-.1zM12 6.5a5.5 5.5 0 1 1-11 0 5.5 5.5 0 0 1 11 0" />
+                </svg>
+            </div>
+        </div>
+
+        <div class="table-responsive-wrapper">
+            <table class="table table-hover resizable-table" id="data-table">
+                <thead class="table-light">
+                    <tr>
+                        <th scope="col">Report ID <div class="resize-handle"></div>
+                        </th>
+                        <th scope="col">Anomaly Type <div class="resize-handle"></div>
+                        </th>
+                        <th scope="col">Location <div class="resize-handle"></div>
+                        </th>
+                        <th scope="col">Date Reported <div class="resize-handle"></div>
+                        </th>
+                        <th scope="col">Status <div class="resize-handle"></div>
+                        </th>
+                    </tr>
+                </thead>
+                <tbody>
+                    
+                </tbody>
+            </table>
+
+            <script>
+                document.addEventListener("DOMContentLoaded", function () {
+                    const rows = document.querySelectorAll("tr[data-href]");
+                    rows.forEach(row => {
+                        row.addEventListener("click", function () {
+                            window.location.href = this.dataset.href;
+                        });
+                    });
+                });
+            </script>
+
+            <div><input type="button" class="btn btn-text" id="load-more-btn" value="Load More..."></div>
+
+            <script>
+                document.addEventListener('DOMContentLoaded', function () {
+                    const table = document.getElementById('data-table');
+                    const tableBody = table.querySelector('tbody');
+                    const headers = table.querySelectorAll('th');
+                    const handles = table.querySelectorAll('.resize-handle');
+                    const MIN_WIDTH = 50; // Minimum column width in pixels
+
+                    // --- New Search Elements ---
+                    const searchInput = document.getElementById('search-input');
+                    const backendSearchBtn = document.getElementById('backend-search-btn');
+                    const loadingIndicator = document.getElementById('loading-indicator');
+                    const loadMoreBtn = document.getElementById('load-more-btn');
+                    const allRows = Array.from(tableBody.querySelectorAll('tr')); // Store original rows
+
+                    // --- Resizing State Variables ---
+                    let currentHeader = null;
+                    let nextHeader = null;
+                    let startX = 0;
+                    let startWidth = 0;
+                    let startNextWidth = 0;
+
+
+                    // --- Load More State & Simulated Local Data ---
+                    const LOCAL_CACHE = [
+                        {% for data in dataset %}
+                        { reportID: {{ data.pk }}, anomalyType: '{{ data.anomalyType }}', location: '{{ data.roadname }}', dateReported: '{{ data.posted_at }}', status: '{{ data.status }}' },
+                        {% endfor %}
+                        
+                        // { reportID: 4, anomalyType: 'Pothole', location: 'Elm St, NY', dateReported: '2024-06-18', status: 'Pending' },
+                        // { reportID: 5, anomalyType: 'Crack', location: 'Maple Ave, CA', dateReported: '2024-06-20', status: 'In Progress' },
+                        // { reportID: 6, anomalyType: 'Faded Markings', location: 'Oak St, FL', dateReported: '2024-06-22', status: 'Resolved' },
+                        // { reportID: 7, anomalyType: 'Pothole', location: 'Pine St, IL', dateReported: '2024-06-25', status: 'Pending' },
+                    ];
+                    const ROWS_PER_LOAD = 3;
+                    let currentLocalIndex = 0;
+                    let backendPage = 1;
+
+                    // =================================================================
+                    // I. COLUMN RESIZING LOGIC (Kept Intact)
+                    // =================================================================
+
+                    // 1. Attach Listeners to all Handles
+                    handles.forEach(handle => {
+                        handle.addEventListener('mousedown', initResize);
+                    });
+
+                    // 2. Start Drag
+                    function initResize(e) {
+                        e.preventDefault();
+
+                        currentHeader = e.target.parentElement;
+
+                        const columnIndex = Array.from(headers).indexOf(currentHeader);
+                        nextHeader = headers[columnIndex + 1];
+
+                        if (!nextHeader) return;
+
+                        startX = e.clientX;
+                        startWidth = currentHeader.offsetWidth;
+                        startNextWidth = nextHeader.offsetWidth;
+
+                        document.addEventListener('mousemove', resize);
+                        document.addEventListener('mouseup', stopResize);
+                        document.body.classList.add('resizing');
+                    }
+
+                    // 3. Perform Resize
+                    function resize(e) {
+                        if (currentHeader && nextHeader) {
+                            const diff = e.clientX - startX;
+
+                            let newWidth = startWidth + diff;
+                            let newNextWidth = startNextWidth - diff;
+
+                            const totalWidth = startWidth + startNextWidth;
+
+                            // Boundary Checks 
+                            if (newWidth < MIN_WIDTH) {
+                                newWidth = MIN_WIDTH;
+                                newNextWidth = totalWidth - MIN_WIDTH;
+                            }
+
+                            if (newNextWidth < MIN_WIDTH) {
+                                newNextWidth = MIN_WIDTH;
+                                newWidth = totalWidth - MIN_WIDTH;
+                            }
+
+                            // Apply new widths to headers
+                            currentHeader.style.width = newWidth + 'px';
+                            nextHeader.style.width = newNextWidth + 'px';
+
+                            // Sync Widths for all cells in the column
+                            const currentColumnIndex = Array.from(headers).indexOf(currentHeader);
+                            const nextColumnIndex = currentColumnIndex + 1;
+                            const allTableRows = table.querySelectorAll('tr');
+
+                            allTableRows.forEach((row, rowIndex) => {
+                                if (rowIndex > 0) {
+                                    const currentCell = row.children[currentColumnIndex];
+                                    const nextCell = row.children[nextColumnIndex];
+
+                                    if (currentCell) currentCell.style.width = newWidth + 'px';
+                                    if (nextCell) nextCell.style.width = newNextWidth + 'px';
+                                }
+                            });
+                        }
+                    }
+
+                    // 4. Stop Drag
+                    function stopResize() {
+                        document.removeEventListener('mousemove', resize);
+                        document.removeEventListener('mouseup', stopResize);
+                        currentHeader = null;
+                        nextHeader = null;
+                        document.body.classList.remove('resizing');
+                    }
+
+                    // =================================================================
+                    // II. HYBRID SEARCH LOGIC
+                    // =================================================================
+
+                    /**
+                     * Handles immediate client-side filtering of the current table rows.
+                     * This provides fast feedback as the user types.
+                     */
+                    function filterTableFrontend() {
+                        const filter = searchInput.value.toUpperCase();
+
+                        allRows.forEach(row => {
+                            let textContent = row.textContent || row.innerText;
+                            // Check if the entire row's text content contains the filter
+                            if (textContent.toUpperCase().indexOf(filter) > -1) {
+                                row.style.display = ""; // Show row
+                            } else {
+                                row.style.display = "none"; // Hide row
+                            }
+                        });
+                    }
+
+                    /**
+                     * Sends the search term to a Django backend endpoint for optimized search.
+                     * The backend is expected to return a JSON array of filtered data.
+                     */
+                    async function searchBackend() {
+                        const query = searchInput.value.trim();
+                        if (!query) return;
+
+                        // --- Django Backend Configuration ---
+                        const API_ENDPOINT = '/api/products/search/'; // Replace with your actual Django URL
+                        const CSRF_TOKEN = 'your_csrf_token'; // Get this from Django template context
+                        // --- End Configuration ---
+
+                        loadingIndicator.classList.remove('d-none');
+
+                        try {
+                            const response = await fetch(`${API_ENDPOINT}?q=${encodeURIComponent(query)}`, {
+                                method: 'GET',
+                                headers: {
+                                    'Content-Type': 'application/json',
+                                    // Add Django CSRF Token if using POST/PUT/DELETE
+                                    // 'X-CSRFToken': CSRF_TOKEN 
+                                },
+                            });
+
+                            if (!response.ok) {
+                                throw new Error(`HTTP error! status: ${response.status}`);
+                            }
+
+                            const data = await response.json();
+
+                            // Call a function to rebuild the table with the new data
+                            updateTableWithNewData(data);
+
+                        } catch (error) {
+                            console.error('Error during backend search:', error);
+                            // Use a custom modal instead of alert
+                            const errorMessage = `Failed to fetch data from backend. Error: ${error.message}. Check the console for details.`;
+                            showCustomModal(errorMessage);
+                        } finally {
+                            // ADDED 500ms delay after the operation completes
+                            await new Promise(resolve => setTimeout(resolve, 500));
+
+                            loadingIndicator.classList.add('d-none');
+                        }
+                    }
+
+                    /**
+                     * Renders the table rows based on the structured data returned from the backend.
+                     * @param {Array<Object>} data - Array of objects, e.g., [{name: '...', category: '...', price: '...', status: '...'}]
+                     */
+                    function updateTableWithNewData(data) {
+                        // Clear existing table content
+                        tableBody.innerHTML = '';
+
+                        if (data.length === 0) {
+                            tableBody.innerHTML = `<tr><td colspan="${headers.length}" class="text-center text-muted">No results found for your query.</td></tr>`;
+                            return;
+                        }
+
+                    //     <tr data-href="/view/{{ data.pk }}">
+                    //     <th scope="row" class="truncate-text">{{ data.pk }}</th>
+                    //     <td>{{ data.anomalyType }}</td>
+                    //     <td>{{ data.roadname }}</td>
+                    //     <td>{{ data.posted_at }}</td>
+                    //     <td>{{ data.status }}</td>
+                    // </tr>
+
+                        data.forEach(item => {
+                            const row = document.createElement('tr');
+                            row.dataset.href = `/view/${item.reportID}`; // Adjust as needed
+
+
+                            // NOTE: Ensure these property names match the JSON response from your Django API
+                            row.innerHTML = `
+                        <th scope="row" class="truncate-text">${item.reportID || 'N/A'}</th>
+                        <td>${item.anomalyType || 'N/A'}</td>
+                        <td>${item.location || 'N/A'}</td>
+                        <td>${item.dateReported || 'N/A'}</td>
+                        <td>${item.status || 'N/A'}</td>
+                    `;
+                            tableBody.appendChild(row);
+                        });
+                    }
+
+                    // Simple custom modal replacement since alert() is forbidden
+                    function showCustomModal(message) {
+                        console.warn("Displaying custom modal message:", message);
+                        // In a real app, you would display a styled Bootstrap modal here.
+                    }
+
+                    // --- Event Listeners for Search ---
+
+                    // Frontend search on keyup for immediate filtering
+                    searchInput.addEventListener('keyup', filterTableFrontend);
+
+                    // Backend search on button click
+                    // backendSearchBtn.addEventListener('click', searchBackend);
+                    searchInput.addEventListener('change', searchBackend);
+
+                    // =================================================================
+                    // III. HYBRID LOAD MORE LOGIC
+                    // =================================================================
+
+                    /**
+                     * Appends new rows to the existing table body.
+                     * @param {Array<Object>} data - Array of item objects.
+                     */
+                    function appendRowsToTable(data) {
+                        const fragment = document.createDocumentFragment();
+
+                        data.forEach(item => {
+                            const row = document.createElement('tr');
+                            row.dataset.href = `/view/${item.reportID}`; // Adjust as needed
+
+                            // Format price for display
+                            // const priceDisplay = item.price ? '$' + parseFloat(item.price).toFixed(2) : 'N/A';
+
+                            // NOTE: Ensure these property names match the JSON response from your Django API
+                            row.innerHTML = `
+                        <th scope="row" class="truncate-text">${item.reportID || 'N/A'}</th>
+                        <td>${item.anomalyType || 'N/A'}</td>
+                        <td>${item.location || 'N/A'}</td>
+                        <td>${item.dateReported || 'N/A'}</td>
+                        <td>${item.status || 'N/A'}</td>
+                    `;
+                            fragment.appendChild(row);
+
+                            row.addEventListener("click", function () {
+                                window.location.href = this.dataset.href;
+                            });
+
+                            // Add the new row to the array tracking all rows for frontend search
+                            allRows.push(row);
+                        });
+
+                        tableBody.appendChild(fragment);
+                    }
+
+                    /**
+                     * Handles the load more button click, prioritizing local cache then server.
+                     */
+                    function loadMoreData() {
+                        const remainingLocal = LOCAL_CACHE.length - currentLocalIndex;
+
+                        if (remainingLocal > 0) {
+                            // Load from local cache
+                            const dataToLoad = LOCAL_CACHE.slice(currentLocalIndex, currentLocalIndex + ROWS_PER_LOAD);
+                            appendRowsToTable(dataToLoad);
+                            currentLocalIndex += ROWS_PER_LOAD;
+
+                            if (currentLocalIndex >= LOCAL_CACHE.length) {
+                                console.log("Local cache exhausted. Next load will hit the server.");
+                            }
+
+                        } else {
+                            // Load from Django server
+                            loadDataFromServer();
+                        }
+                    }
+
+                    /**
+                     * Fetches the next page of data from the simulated Django endpoint.
+                     */
+                    async function loadDataFromServer() {
+                        const PAGE_SIZE = 10; // Expected page size from server
+                        const API_ENDPOINT = '/api/products/paginate/'; // Replace with your Django pagination URL
+
+                        // Increment the page count before the request
+                        backendPage++;
+
+                        loadMoreBtn.disabled = true;
+                        loadMoreBtn.hidden = true;
+                        loadMoreBtn.innerHTML = '<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> Loading...';
+                        loadingIndicator.classList.remove('d-none');
+
+
+                        try {
+                            // Simulation: In a real app, this is where you fetch from Django
+                            console.log(`PAGINATION: Attempting to fetch Page ${backendPage} from: ${API_ENDPOINT}?page=${backendPage}`);
+
+                            // SIMULATING A SUCCESSFUL AJAX CALL WITH NO MORE DATA
+                            // A real fetch would go here: const response = await fetch(...);
+                            await new Promise(resolve => setTimeout(resolve, 1500)); // Simulate network delay
+
+                            // --- SIMULATED RESPONSE ---
+                            const simulatedData = []; // Assume no more data is returned after page 2
+
+                            if (simulatedData.length > 0) {
+                                appendRowsToTable(simulatedData);
+                            } else {
+                                // If the server returns an empty array, disable the button
+                                loadMoreBtn.textContent = 'No More Items';
+                                loadMoreBtn.disabled = true;
+                                loadMoreBtn.hidden = true;
+                                showCustomModal(`Backend search successful. No more items found after page ${backendPage - 1}.`);
+                            }
+
+                        } catch (error) {
+                            console.error('Error loading data from server:', error);
+                            showCustomModal(`Failed to load data from server. Error: ${error.message}`);
+                            // If fetch fails, decrement the page count so the next click retries
+                            backendPage--;
+                        } finally {
+                            loadingIndicator.classList.add('d-none');
+                            // Restore button if not disabled by 'No More Items' logic
+                            if (loadMoreBtn.textContent === 'No More Items') return;
+                            loadMoreBtn.textContent = 'Load More Items';
+                            loadMoreBtn.disabled = false;
+                            loadMoreBtn.hidden = false;
+                        }
+                    }
+
+                    // --- Event Listener for Load More ---
+                    loadMoreBtn.addEventListener('click', loadMoreData);
+
+                    // Simple custom modal replacement since alert() is forbidden
+                    function showCustomModal(message) {
+                        console.warn("Custom Modal Message:", message);
+                        // In a real application, you would implement a visible Bootstrap modal component here.
+                    }
+
+                    window.onload = function () {
+                        // Initial load from local cache
+                        loadMoreData();
+                    };
+
+                });
+            </script>
+
+        </div>
+
+        <div class="mt-4 mb-1 fs-3">Road Anomaly Detection Reports Graph</div>
+        <div id="myDiv">{{ graph|safe }}</div>
+
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"
+        integrity="sha384-YvpcrYf0tY3lHB60NNkmXc5s9fDVZLESaAA55NDzOxhy9GkcIdslK1eN7N6jIeHz"
+        crossorigin="anonymous"></script>
+</body>
+
+</html>

@@ -1,0 +1,607 @@
+<!-- <!DOCTYPE html>
+<html>
+<head>
+    <title>OpenStreetMap Location Selector</title>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
+     integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY="
+     crossorigin=""/>
+
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            padding: 20px;
+        }
+
+        /* The modal (hidden by default) */
+        .modal {
+            display: none; /* Hidden by default */
+            position: fixed; /* Stay in place */
+            z-index: 1000; /* Sit on top */
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            overflow: auto; /* Enable scroll if needed */
+            background-color: rgba(0, 0, 0, 0.5); /* Black w/ opacity */
+            
+            /* For centering the content */
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        /* Modal Content */
+        .modal-content {
+            background-color: #fefefe;
+            padding: 20px;
+            border-radius: 8px;
+            width: 90%;
+            max-width: 700px;
+            position: relative;
+        }
+
+        /* The Close Button */
+        .close-btn {
+            color: #aaa;
+            position: absolute;
+            top: 10px;
+            right: 20px;
+            font-size: 28px;
+            font-weight: bold;
+        }
+
+        .close-btn:hover,
+        .close-btn:focus {
+            color: black;
+            text-decoration: none;
+            cursor: pointer;
+        }
+
+        /* The map container inside the modal */
+        /* You MUST set a specific height for the map */
+        #map {
+            height: 450px;
+            width: 100%;
+            border-radius: 4px;
+        }
+
+        /* Utility class to hide the modal */
+        .hidden {
+            display: none;
+        }
+    </style>
+</head>
+<body>
+
+    <h2>OpenStreetMap Location Picker Example</h2>
+    <p>Click the button below to open a map. Click anywhere on the map to log the coordinates.</p>
+
+    <button id="openMapBtn">🗺️ Open Map to Select Location</button>
+
+    <input type="text" class="form-control" id="geo-location" placeholder="Geo Location"
+                style="margin-bottom: 10px;" value="" readonly>
+
+    <div id="mapModal" class="modal hidden">
+
+        <div class="modal-content">
+            <span class="close-btn">&times;</span>
+            <h3>Click on the map to select a location</h3>
+            
+            <div id="map"></div>
+
+        </div>
+    </div>
+
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"
+     integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo="
+     crossorigin=""></script>
+
+    <script>
+        // 1. GET DOM ELEMENTS
+        const openMapBtn = document.getElementById('openMapBtn');
+        const mapModal = document.getElementById('mapModal');
+        const closeBtn = document.querySelector('.close-btn');
+        
+        let map;      // Variable to hold the Leaflet map instance
+        let marker;   // Variable to hold the Leaflet marker instance
+
+        // 2. FUNCTION TO INITIALIZE THE MAP
+        function initializeMap() {
+            // Set up the map
+            map = L.map('map').setView([51.505, -0.09], 13); // Default to London
+
+            // 3. ADD THE OpenStreetMap TILE LAYER
+            // This is the line that uses OpenStreetMap
+            L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+                attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+            }).addTo(map);
+
+            // 4. ADD THE 'click' EVENT LISTENER TO THE MAP
+            map.on('click', (e) => {
+                const coords = e.latlng; // Get coordinates from the event object
+                
+                // --- THIS IS THE CORE OF YOUR REQUEST ---
+                console.log('Location Selected:');
+                console.log(`Latitude: ${coords.lat}`);
+                console.log(`Longitude: ${coords.lng}`);
+
+                document.getElementById('geo-location').value = `${coords.lat}, ${coords.lng}`;
+                
+                // Optional: Add/move a marker
+                // Remove the previous marker if it exists
+                if (marker) {
+                    marker.setLatLng(coords);
+                } else {
+                    // Add a new marker
+                    marker = L.marker(coords).addTo(map);
+                }
+                
+                // Optional: You could also close the modal after selection
+                // hideModal();
+            });
+        }
+
+        // 5. FUNCTIONS TO SHOW/HIDE THE MODAL
+        function showModal() {
+            mapModal.classList.remove('hidden');
+            
+            // Initialize the map *only once*
+            if (!map) {
+                initializeMap();
+            } else {
+                // If map already exists, just resize it to fit the modal
+                // This is crucial if the window was resized while modal was hidden
+                map.invalidateSize();
+            }
+        }
+
+        function hideModal() {
+            mapModal.classList.add('hidden');
+        }
+
+        // 6. ADD EVENT LISTENERS TO BUTTONS
+        openMapBtn.addEventListener('click', showModal);
+        closeBtn.addEventListener('click', hideModal);
+
+        // Also hide modal if user clicks on the background overlay
+        window.addEventListener('click', (event) => {
+            if (event.target === mapModal) {
+                hideModal();
+            }
+        });
+    </script>
+
+</body>
+</html> -->
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<!-- 
+
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Draggable OpenStreetMap Box</title>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
+     integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY="
+     crossorigin=""/>
+
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            padding: 20px;
+        }
+
+        /* The modal (hidden by default) */
+        .modal {
+            display: none; /* Hidden by default */
+            position: fixed; /* Stay in place */
+            z-index: 1000; /* Sit on top */
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            overflow: auto; /* Enable scroll if needed */
+            background-color: rgba(0, 0, 0, 0.5); /* Black w/ opacity */
+        }
+
+        /* Modal Content - NOW DRAGGABLE */
+        .modal-content {
+            background-color: #fefefe;
+            padding: 20px;
+            border-radius: 8px;
+            width: 90%;
+            max-width: 700px;
+            
+            /* --- CSS Changes for Dragging --- */
+            position: absolute; /* Changed from default for positioning */
+            z-index: 1001; /* Ensure it's above the modal overlay */
+            box-shadow: 0 5px 15px rgba(0,0,0,0.3);
+        }
+
+        /* The Drag Handle (the header) */
+        .modal-content h3 {
+            cursor: move; /* --- Add move cursor to the header --- */
+            margin-top: 0;
+        }
+
+        /* The Close Button */
+        .close-btn {
+            color: #aaa;
+            position: absolute;
+            top: 10px;
+            right: 20px;
+            font-size: 28px;
+            font-weight: bold;
+        }
+
+        .close-btn:hover,
+        .close-btn:focus {
+            color: black;
+            text-decoration: none;
+            cursor: pointer;
+        }
+
+        /* The map container */
+        #map {
+            height: 450px;
+            width: 100%;
+            border-radius: 4px;
+        }
+
+        /* Utility class to hide the modal */
+        .hidden {
+            display: none;
+        }
+    </style>
+</head>
+<body>
+
+    <h2>Draggable Map Box Example</h2>
+    <p>Click the button, then click and drag the modal's header to move it.</p>
+
+    <button id="openMapBtn">🗺️ Open Map to Select Location</button>
+
+    <div id="mapModal" class="modal hidden">
+
+        <div id="modalContent" class="modal-content">
+            <span class="close-btn">&times;</span>
+            <h3 id="modalHeader">Click on the map to select a location</h3>
+            <p>Check your browser's console (F12) to see the coordinates.</p>
+            
+            <div id="map"></div>
+        </div>
+    </div>
+
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"
+     integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo="
+     crossorigin=""></script>
+
+    <script>
+        // 1. GET DOM ELEMENTS
+        const openMapBtn = document.getElementById('openMapBtn');
+        const mapModal = document.getElementById('mapModal');
+        const modalContent = document.getElementById('modalContent');
+        const modalHeader = document.getElementById('modalHeader');
+        const closeBtn = document.querySelector('.close-btn');
+        
+        let map;
+        let marker;
+
+        // 2. MAP INITIALIZATION FUNCTION
+        function initializeMap() {
+            map = L.map('map').setView([51.505, -0.09], 13);
+            L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+                attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+            }).addTo(map);
+
+            map.on('click', (e) => {
+                const coords = e.latlng;
+                console.log('Location Selected:');
+                console.log(`Latitude: ${coords.lat}`);
+                console.log(`Longitude: ${coords.lng}`);
+                
+                if (marker) {
+                    marker.setLatLng(coords);
+                } else {
+                    marker = L.marker(coords).addTo(map);
+                }
+            });
+        }
+
+        // 3. FUNCTIONS TO SHOW/HIDE THE MODAL
+        function showModal() {
+            // --- Center the modal before showing ---
+            // This sets the initial position before dragging
+            modalContent.style.left = (window.innerWidth - modalContent.offsetWidth) / 2 + 'px';
+            modalContent.style.top = (window.innerHeight - modalContent.offsetHeight) / 2 + 'px';
+
+            mapModal.classList.remove('hidden');
+            
+            if (!map) {
+                initializeMap();
+            } else {
+                map.invalidateSize();
+            }
+        }
+
+        function hideModal() {
+            mapModal.classList.add('hidden');
+        }
+
+        // 6. ADD EVENT LISTENERS TO BUTTONS
+        openMapBtn.addEventListener('click', showModal);
+        closeBtn.addEventListener('click', hideModal);
+        window.addEventListener('click', (event) => {
+            if (event.target === mapModal) {
+                hideModal();
+            }
+        });
+
+        // --- 7. NEW DRAGGING LOGIC ---
+
+        // Make the modal draggable
+        dragElement(modalContent, modalHeader);
+
+        function dragElement(elmnt, headerElmnt) {
+            let pos1 = 0, pos2 = 0, pos3 = 0, pos4 = 0;
+
+            // Use the header element to drag
+            headerElmnt.onmousedown = dragMouseDown;
+
+            function dragMouseDown(e) {
+                e = e || window.event;
+                e.preventDefault(); // Prevent text selection on drag
+                
+                // Get the mouse cursor position at startup
+                pos3 = e.clientX;
+                pos4 = e.clientY;
+                
+                // Set up the mousemove and mouseup events on the whole document
+                document.onmouseup = closeDragElement;
+                document.onmousemove = elementDrag;
+            }
+
+            function elementDrag(e) {
+                e = e || window.event;
+                e.preventDefault();
+                
+                // Calculate the new cursor position
+                pos1 = pos3 - e.clientX;
+                pos2 = pos4 - e.clientY;
+                pos3 = e.clientX;
+                pos4 = e.clientY;
+                
+                // Set the element's new position
+                let newTop = elmnt.offsetTop - pos2;
+                let newLeft = elmnt.offsetLeft - pos1;
+
+                // --- Boundary check (optional but recommended) ---
+                // Keep it from going off-screen
+                const minTop = 0;
+                const minLeft = 0;
+                const maxTop = window.innerHeight - elmnt.offsetHeight;
+                const maxLeft = window.innerWidth - elmnt.offsetWidth;
+                
+                if (newTop < minTop) newTop = minTop;
+                if (newLeft < minLeft) newLeft = minLeft;
+                if (newTop > maxTop) newTop = maxTop;
+                if (newLeft > maxLeft) newLeft = maxLeft;
+                // --- End boundary check ---
+
+                elmnt.style.top = newTop + "px";
+                elmnt.style.left = newLeft + "px";
+            }
+
+            function closeDragElement() {
+                // Stop moving when mouse button is released
+                document.onmouseup = null;
+                document.onmousemove = null;
+            }
+        }
+    </script>
+
+</body>
+</html> -->
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Draggable OpenStreetMap Box</title>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
+     integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY="
+     crossorigin=""/>
+
+    <style>
+        
+    </style>
+</head>
+<body>
+
+    <h2>Draggable Map Box Example</h2>
+    <p>Click the button, then click and drag the modal's header to move it.</p>
+
+    <button id="openMapBtn">🗺️ Open Map to Select Location</button>
+
+    <div id="mapModal" class="modal hidden">
+
+        <div id="modalContent" class="modal-content">
+            <span class="close-btn">&times;</span>
+            <h3 id="modalHeader">Click on the map to select a location</h3>
+            <p>Check your browser's console (F12) to see the coordinates.</p>
+            
+            <div id="map"></div>
+        </div>
+    </div>
+
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"
+     integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo="
+     crossorigin=""></script>
+
+    <script>
+        // 1. GET DOM ELEMENTS
+        const openMapBtn = document.getElementById('openMapBtn');
+        const mapModal = document.getElementById('mapModal');
+        const modalContent = document.getElementById('modalContent');
+        const modalHeader = document.getElementById('modalHeader');
+        const closeBtn = document.querySelector('.close-btn');
+        
+        let map;
+        let marker;
+
+        // 2. MAP INITIALIZATION FUNCTION
+        function initializeMap() {
+            map = L.map('map').setView([51.505, -0.09], 13);
+            L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+                attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+            }).addTo(map);
+
+            map.on('click', (e) => {
+                const coords = e.latlng;
+                console.log('Location Selected:');
+                console.log(`Latitude: ${coords.lat}`);
+                console.log(`Longitude: ${coords.lng}`);
+                
+                if (marker) {
+                    marker.setLatLng(coords);
+                } else {
+                    marker = L.marker(coords).addTo(map);
+                }
+            });
+        }
+
+        // 3. FUNCTIONS TO SHOW/HIDE THE MODAL
+        // function showModal() {
+        //     // Center the modal before showing
+        //     modalContent.style.left = (window.innerWidth - modalContent.offsetWidth) / 2 + 'px';
+        //     modalContent.style.top = (window.innerHeight - modalContent.offsetHeight) / 2 + 'px';
+
+        //     mapModal.classList.remove('hidden');
+            
+        //     if (!map) {
+        //         initializeMap();
+        //     } else {
+        //         map.invalidateSize();
+        //     }
+        // }
+
+        // 3. FUNCTIONS TO SHOW/HIDE THE MODAL
+        function showModal() {
+            // 1. Make the modal visible first
+            mapModal.classList.remove('hidden');
+            
+            // 2. NOW calculate its center (it has real dimensions)
+            modalContent.style.left = (window.innerWidth - modalContent.offsetWidth) / 2 + 'px';
+            modalContent.style.top = (window.innerHeight - modalContent.offsetHeight) / 2 + 'px';
+            
+            // 3. Initialize or resize the map
+            if (!map) {
+                initializeMap();
+            } else {
+                map.invalidateSize();
+            }
+        }
+
+        function hideModal() {
+            mapModal.classList.add('hidden');
+        }
+
+        // 6. ADD EVENT LISTENERS TO BUTTONS
+        openMapBtn.addEventListener('click', showModal);
+        closeBtn.addEventListener('click', hideModal);
+        window.addEventListener('click', (event) => {
+            if (event.target === mapModal) {
+                hideModal();
+            }
+        });
+
+        // --- 7. DRAGGING LOGIC ---
+        dragElement(modalContent, modalHeader);
+
+        function dragElement(elmnt, headerElmnt) {
+            let pos1 = 0, pos2 = 0, pos3 = 0, pos4 = 0;
+            headerElmnt.onmousedown = dragMouseDown;
+
+            function dragMouseDown(e) {
+                e = e || window.event;
+                e.preventDefault(); 
+                pos3 = e.clientX;
+                pos4 = e.clientY;
+                document.onmouseup = closeDragElement;
+                document.onmousemove = elementDrag;
+            }
+
+            function elementDrag(e) {
+                e = e || window.event;
+                e.preventDefault();
+                pos1 = pos3 - e.clientX;
+                pos2 = pos4 - e.clientY;
+                pos3 = e.clientX;
+                pos4 = e.clientY;
+                
+                let newTop = elmnt.offsetTop - pos2;
+                let newLeft = elmnt.offsetLeft - pos1;
+
+                // Boundary check
+                const minTop = 0;
+                const minLeft = 0;
+                const maxTop = window.innerHeight - elmnt.offsetHeight;
+                const maxLeft = window.innerWidth - elmnt.offsetWidth;
+                
+                if (newTop < minTop) newTop = minTop;
+                if (newLeft < minLeft) newLeft = minLeft;
+                if (newTop > maxTop) newTop = maxTop;
+                if (newLeft > maxLeft) newLeft = maxLeft;
+
+                elmnt.style.top = newTop + "px";
+                elmnt.style.left = newLeft + "px";
+            }
+
+            function closeDragElement() {
+                document.onmouseup = null;
+                document.onmousemove = null;
+            }
+        }
+    </script>
+
+</body>
+</html>

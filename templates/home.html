@@ -1,0 +1,111 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Road Anomaly Detection - Upload</title>
+    <!-- Bootstrap CSS for responsiveness -->
+    <link name="bootstrap" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.6/dist/css/bootstrap.min.css"
+        rel="stylesheet" integrity="sha384-4Q6Gf2aSP4eDXB8Miphtr37CMZZQ5oXLH2yaXMJ2w8e2ZtHTl7GptT4jmndRuHDT"
+        crossorigin="anonymous">
+    <link rel="stylesheet" href="{% static 'nav-style.css' %}">
+    <script src="https://cdn.plot.ly/plotly-latest.min.js" charset="utf-8"></script>
+</head>
+
+<body>
+    <!-- Messages -->
+    {% if messages %}
+    <div class="messages mb-3">
+        {% for message in messages %}
+        <div class="alert alert-{{ message.tags }} alert-dismissible fade show" role="alert">
+            {{ message }}
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+        {% endfor %}
+    </div>
+    {% endif %}
+
+    {% include "nav.html" %}
+
+    <div class="container m-5">
+        <h1>Welcome to Road Anomaly Detection</h1>
+        <p>Road Anomaly Detection is an intelligent computer vision-based platform designed to automatically detect road
+            damage from user-provided images and videos. Using advanced deep learning techniques and a fine-tuned YOLOv8
+            model, our system can quickly identify potholes, cracks, and other road anomalies with high accuracy.
+            <br>
+            Whether you're a road maintenance authority, a smart city developer, or simply a citizen wanting to
+            contribute to safer roads, our platform makes reporting and analyzing road conditions seamless and
+            efficient. Just upload your data, and let our AI take care of the rest!
+        </p>
+
+        <div>
+            <h2>Get Started</h2>
+            <p>To begin using the Road Anomaly Detection platform, you can navigate to the following sections:</p>
+            <ul>
+                <li><strong>Upload Report:</strong> Go to the <a href="{% url 'uploadReport' %}">Upload Report</a> page
+                    to submit images or videos of road conditions for analysis.</li>
+                <li><strong>View Reports:</strong> Visit the <a href="{% url 'viewReport' %}">View Reports</a> page to
+                    see previously submitted reports and their analysis results.</li>
+            </ul>
+            <p>If you have any questions or need assistance, feel free to reach out through our contact page.</p>
+        </div>
+
+        <div>
+            <h2>Platform Statistics</h2>
+            <h5>Total reports: {{ data.total_reports }}</h5>
+        </div>
+
+        <!-- <div>
+            <h2>About the Model</h2>
+            <p>The core of our road anomaly detection system is built upon the YOLOv8 (You Only Look Once version 8)
+                architecture, a state-of-the-art deep learning model known for its speed and accuracy in object
+                detection tasks. We have fine-tuned this model specifically for road anomaly detection using a
+                comprehensive dataset of road images and videos.</p>
+            <p>Key features of our model include:</p>
+            <ul>
+                <li><strong>High Accuracy:</strong> Our fine-tuned YOLOv8 model achieves high precision in detecting
+                    various types of road anomalies, including potholes, cracks, and surface deformations.</li>
+                <li><strong>Real-time Processing:</strong> The model is optimized for real-time analysis, allowing for
+                    quick detection and reporting of road conditions.</li>
+                <li><strong>Robustness:</strong> Trained on diverse datasets, our model performs well under varying
+                    lighting and weather conditions.</li>
+            </ul>
+            <p>We continuously update and improve our model to ensure it remains effective in identifying road
+                anomalies, contributing to safer and better-maintained roadways.</p>
+        </div> -->
+
+        <!-- <div class="mt-2 p-0 b-0">
+            <h2>Road anomaly detection graphs and data</h2>
+            <div id="myPlot" style="width:100%;max-width:700px"></div>
+            <script>
+                const xArray = [50, 60, 70, 80, 90, 100, 110, 120, 130, 140, 150];
+                const yArray = [7, 8, 8, 9, 9, 9, 10, 11, 14, 14, 15];
+
+                // Define Data
+                const data = [{
+                    x: xArray,
+                    y: yArray,
+                    mode: "lines"
+                }];
+
+                // Define Layout
+                const layout = {
+                    xaxis: { range: [40, 160], title: "Square Meters" },
+                    yaxis: { range: [5, 16], title: "Price in Millions" },
+                    title: "House Prices vs. Size"
+                };
+
+                // Display using Plotly
+                Plotly.newPlot("myPlot", data, layout);
+            </script>
+        </div> -->
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"
+        integrity="sha384-YvpcrYf0tY3lHB60NNkmXc5s9fDVZLESaAA55NDzOxhy9GkcIdslK1eN7N6jIeHz"
+        crossorigin="anonymous"></script>
+</body>
+
+</html>

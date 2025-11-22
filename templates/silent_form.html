@@ -1,0 +1,63 @@
+<form id="myForm" method="post" action="{% url 'silent-submit' %}">
+    {% csrf_token %}
+    <label for="name">Name:</label>
+    <input type="text" id="name" name="name">
+    <label for="email">Email:</label>
+    <input type="email" id="email" name="email">
+    <button type="submit">Submit Silently</button>
+</form>
+
+<div id="responseMessage"></div>
+
+<script>
+    // Function to get the CSRF token from the cookie
+    function getCookie(name) {
+        let cookieValue = null;
+        if (document.cookie && document.cookie !== '') {
+            const cookies = document.cookie.split(';');
+            for (let i = 0; i < cookies.length; i++) {
+                const cookie = cookies[i].trim();
+                // Does this cookie string begin with the name we want?
+                if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                    cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                    break;
+                }
+            }
+        }
+        return cookieValue;
+    }
+
+    const form = document.getElementById('myForm');
+    const responseDiv = document.getElementById('responseMessage');
+
+    form.addEventListener('submit', function(e) {
+        e.preventDefault(); // Prevents the default page reload
+
+        const formData = new FormData(form);
+        // Convert FormData to a JSON object
+        const jsonData = {};
+        formData.forEach((value, key) => {
+            jsonData[key] = value;
+        });
+
+        fetch(form.action, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRFToken': getCookie('csrftoken'), // Include the CSRF token
+                'X-Requested-With': 'XMLHttpRequest' // Helps Django identify it as AJAX
+            },
+            body: JSON.stringify(jsonData)
+        })
+        .then(response => response.json())
+        .then(data => {
+            console.log('Success:', data);
+            responseDiv.innerHTML = `<p style="color: green;">${data.message + data.data}</p>`;
+            form.reset(); // Optionally reset the form after success
+        })
+        .catch((error) => {
+            console.error('Error:', error);
+            responseDiv.innerHTML = `<p style="color: red;">An error occurred.</p>`;
+        });
+    });
+</script>

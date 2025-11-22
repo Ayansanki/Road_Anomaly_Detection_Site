@@ -1,0 +1,470 @@
+{% load static %}
+<!-- upload_template.html -->
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Road Anomaly Detection - Upload</title>
+    <!-- Bootstrap CSS for responsiveness -->
+    <link name="bootstrap" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.6/dist/css/bootstrap.min.css"
+        rel="stylesheet" integrity="sha384-4Q6Gf2aSP4eDXB8Miphtr37CMZZQ5oXLH2yaXMJ2w8e2ZtHTl7GptT4jmndRuHDT"
+        crossorigin="anonymous">
+
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
+        integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin="" />
+
+    <link rel="stylesheet" href="{% static 'nav-style.css' %}" type="text/css">
+    <link rel="stylesheet" href="{% static 'mapbox-style.css' %}" type="text/css">
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+        }
+
+        /* The Modal (background) */
+        .modal {
+            display: block;
+            /* Was 'display: none;' */
+            position: fixed;
+            z-index: 1000;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            overflow: auto;
+            background-color: rgba(0, 0, 0, 0.5);
+        }
+
+        /* Modal Content - Draggable */
+        .modal-content {
+            background-color: #fefefe;
+            padding: 20px;
+            border-radius: 8px;
+            width: 90%;
+            max-width: 700px;
+
+            position: absolute;
+            /* For positioning */
+            z-index: 1001;
+            /* Above the overlay */
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
+        }
+
+        /* The Drag Handle (the header) */
+        .modal-content #modalHeader {
+            cursor: move;
+            margin-top: 0;
+        }
+
+        /* The Close Button */
+        .close-btn {
+            color: #aaa;
+            position: absolute;
+            top: 10px;
+            right: 20px;
+            font-size: 28px;
+            font-weight: bold;
+        }
+
+        .close-btn:hover,
+        .close-btn:focus {
+            color: black;
+            text-decoration: none;
+            cursor: pointer;
+        }
+
+        /* The map container */
+        #map {
+            height: 450px;
+            width: 100%;
+            border-radius: 4px;
+        }
+
+        /* Utility class to HIDE the modal */
+        .hidden {
+            display: none;
+        }
+
+        input::-webkit-outer-spin-button,
+        input::-webkit-inner-spin-button {
+            -webkit-appearance: none;
+            margin: 0;
+        }
+
+        /* For Firefox */
+        input[type=number] {
+            --moz-appearance: textfield;
+        }
+    </style>
+</head>
+
+<body>
+    {% include "nav.html" %}
+    {% if request.user.is_authenticated %}
+
+    {% if messages %}
+    <div class="messages mb-3">
+        {% for message in messages %}
+        <div class="alert alert-{{ message.tags }} alert-dismissible fade show" role="alert">
+            {{ message }}
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+        {% endfor %}
+    </div>
+    {% endif %}
+
+    <div class="container mt-5">
+        <h2 class="text-center mb-4">Upload Road Anomaly Report</h2>
+        <div class="row justify-content-center">
+            <div class="col-md-10 col-lg-8">
+                <form method="post" enctype="multipart/form-data" id="upload-form" action="report" novalidate>
+
+                    {% csrf_token %}
+                    <div class="form-floating mb-3">
+                        <input type="text" name="register" class="form-control" id="register-input"
+                            value="{{ request.user.name }} - {{ request.user.email }}" readonly disabled>
+                        <label for="register-input">Register Info</label>
+
+                    </div>
+
+                    <div class="input-group has-validation mb-3">
+                        <span class="input-group-text">Area Name</span>
+                        <div class="form-floating flex-grow-1 ">
+                            <input type="text" name="areaname" class="form-control " id="area-name"
+                                placeholder="Area Name" list="areaNameSuggestions" required>
+                            <label for="area-name">Area Name</label>
+                            <datalist id="areaNameSuggestions">
+                                <option value="Downtown">
+                                <option value="Uptown">
+                                <option value="Midtown">
+                            </datalist>
+                        </div>
+                        <div class="invalid-feedback">
+                            Please choose a valid area name.
+                        </div>
+                    </div>
+
+                    <div class="input-group has-validation mb-3">
+                        <span class="input-group-text">Pincode</span>
+                        <div class="form-floating flex-grow-1 ">
+                            <input type="number" name="pincode" class="form-control " id="pincode" placeholder="Pincode"
+                                list="pincodeSuggestions" required>
+                            <label for="pincode">Pincode</label>
+                            <datalist id="pincodeSuggestions">
+                                <option value="123456">
+                                <option value="654321">
+                                <option value="111222">
+                            </datalist>
+                        </div>
+                        <div class="invalid-feedback">
+                            Please choose a valid pincode.
+                        </div>
+                    </div>
+
+
+                    <div class="input-group has-validation mb-3">
+                        <span class="input-group-text">Road Name</span>
+                        <div class="form-floating flex-grow-1 ">
+                            <input type="text" name="roadname" class="form-control " id="road-name"
+                                placeholder="Road Name" list="roadNameSuggestions" required>
+                            <label for="road-name">Road Name</label>
+                            <datalist id="roadNameSuggestions">
+                                <option value="Main St">
+                                <option value="Second St">
+                                <option value="Third St">
+                            </datalist>
+                        </div>
+                        <div class="invalid-feedback">
+                            Please choose a road name.
+                        </div>
+                    </div>
+
+                    <div class="input-group has-validation mb-3">
+                        <span class="input-group-text">Geo Location</span>
+                        <div class="form-floating flex-grow-1">
+                            <input type="text" name="geolocation" class="form-control" id="geo-location"
+                                placeholder="Geo Location" list="geoLocationSuggestions" required>
+                            <label for="geo-location">Geo Location</label>
+                            <datalist id="geoLocationSuggestions">
+                                <option value="37.7749,-122.4194">
+                                <option value="34.0522,-118.2437">
+                                <option value="40.7128,-74.0060">
+                            </datalist>
+                        </div>
+                        <input type="button" class="btn input-group-text" id="openMapBtn" value="Choose from map"
+                            style="border-color: rgb(222, 226, 230); background-color: rgb(248, 249, 250);">
+                        <div class="invalid-feedback">
+                            Please choose a geo location.
+                        </div>
+                    </div>
+
+                    <div class="form-floating mb-3">
+                        <div class="mb-1 text-bold">File Type</div>
+                        <div class="form-check" id="form-ratio">
+                            <input class="form-check-input" type="radio" name="radioDefault" id="radioDefault1">
+                            <label class="form-check-label" for="radioDefault1">
+                                Image
+                            </label>
+                        </div>
+                        <div class="form-check">
+                            <input class="form-check-input" type="radio" name="radioDefault" id="radioDefault2">
+                            <label class="form-check-label" for="radioDefault2">
+                                Video
+                            </label>
+                        </div>
+                        <!-- <div class="form-check">
+                            <input class="form-check-input" type="radio" name="radioDefault" id="radioDefault3">
+                            <label class="form-check-label" for="radioDefault3">
+                                Other Formats or Mixed
+                            </label>
+                        </div> -->
+                    </div>
+
+                    <div class="has-validation mb-3">
+                        <label for="formFileMultiple" class="form-label">Upload Files</label>
+                        <input class="form-control" name="files" type="file" id="formFileMultiple" multiple>
+                        <div class="invalid-feedback">
+                            Please choose a file.
+                        </div>
+                    </div>
+
+                    <div class="input-group has-validation mb-3">
+                        <span class="input-group-text">Instruction</span>
+                        <textarea class="form-control" name="instruction" id="exampleFormControlTextarea1" rows="3.5"
+                            aria-placeholder="Provide an Instruction"></textarea>
+                        <div class="invalid-feedback">
+                            Please provide instruction.
+                        </div>
+                    </div>
+
+                    <div class="d-grid">
+                        <button class="btn btn-primary btn-lg" type="submit">Upload</button>
+                    </div>
+
+                    <!-- {% if form.non_field_errors %} -->
+                    <div class="alert alert-danger mt-3">
+                        <!-- {{ form.non_field_errors }} -->
+                        Sample non-field error message.
+                    </div>
+                    <!-- {% endif %} -->
+
+                </form>
+
+                <div id="mapModal" class="modal hidden">
+                    <div id="modalContent" class="modal-content">
+                        <span class="close-btn">&times;</span>
+                        <h4 id="modalHeader">Click on the map to select a location</h4>
+                        <div id="map"></div>
+                    </div>
+                </div>
+
+                <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"
+                    integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
+
+                <script>
+                    // 1. GET DOM ELEMENTS
+                    const openMapBtn = document.getElementById('openMapBtn');
+                    const mapModal = document.getElementById('mapModal');
+                    const modalContent = document.getElementById('modalContent');
+                    const modalHeader = document.getElementById('modalHeader');
+                    const closeBtn = document.querySelector('.close-btn');
+
+                    let map;
+                    let marker;
+
+                    // 2. MAP INITIALIZATION FUNCTION
+                    function initializeMap() {
+                        map = L.map('map').setView([22.62, 88.40], 10);
+                        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+                            attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+                        }).addTo(map);
+
+                        map.on('click', (e) => {
+                            const coords = e.latlng;
+                            // console.log('Location Selected:');
+                            // console.log(`Latitude: ${coords.lat}`);
+                            // console.log(`Longitude: ${coords.lng}`);
+                            // document.getElementById('geo-location').value = `${coords.lat.toFixed(6)}, ${coords.lng.toFixed(6)}`;
+                            document.getElementById('geo-location').value = `${coords.lat}, ${coords.lng}`;
+
+                            // Optional: Add/move a marker
+                            if (marker) {
+                                marker.setLatLng(coords);
+                            } else {
+                                marker = L.marker(coords).addTo(map);
+                            }
+                        });
+                    }
+
+                    // 3. FUNCTIONS TO SHOW/HIDE THE MODAL
+                    function showModal() {
+                        // 1. Make the modal visible first
+                        mapModal.classList.remove('hidden');
+
+                        // 2. NOW calculate its center (it has real dimensions)
+                        modalContent.style.left = (window.innerWidth - modalContent.offsetWidth) / 2 + 'px';
+                        modalContent.style.top = (window.innerHeight - modalContent.offsetHeight) / 2 + 'px';
+
+                        // 3. Initialize or resize the map
+                        if (!map) {
+                            initializeMap();
+                        } else {
+                            map.invalidateSize();
+                        }
+                    }
+
+                    function hideModal() {
+                        mapModal.classList.add('hidden');
+                    }
+
+                    // 6. ADD EVENT LISTENERS TO BUTTONS
+                    openMapBtn.addEventListener('click', showModal);
+                    closeBtn.addEventListener('click', hideModal);
+                    window.addEventListener('click', (event) => {
+                        if (event.target === mapModal) {
+                            hideModal();
+                        }
+                    });
+
+                    // --- 7. DRAGGING LOGIC ---
+                    dragElement(modalContent, modalHeader);
+
+                    function dragElement(elmnt, headerElmnt) {
+                        let pos1 = 0, pos2 = 0, pos3 = 0, pos4 = 0;
+                        headerElmnt.onmousedown = dragMouseDown;
+
+                        function dragMouseDown(e) {
+                            e = e || window.event;
+                            e.preventDefault();
+                            pos3 = e.clientX;
+                            pos4 = e.clientY;
+                            document.onmouseup = closeDragElement;
+                            document.onmousemove = elementDrag;
+                        }
+
+                        function elementDrag(e) {
+                            e = e || window.event;
+                            e.preventDefault();
+                            pos1 = pos3 - e.clientX;
+                            pos2 = pos4 - e.clientY;
+                            pos3 = e.clientX;
+                            pos4 = e.clientY;
+
+                            let newTop = elmnt.offsetTop - pos2;
+                            let newLeft = elmnt.offsetLeft - pos1;
+
+                            // Boundary check
+                            const minTop = 0;
+                            const minLeft = 0;
+                            const maxTop = window.innerHeight - elmnt.offsetHeight;
+                            const maxLeft = window.innerWidth - elmnt.offsetWidth;
+
+                            if (newTop < minTop) newTop = minTop;
+                            if (newLeft < minLeft) newLeft = minLeft;
+                            if (newTop > maxTop) newTop = maxTop;
+                            if (newLeft > maxLeft) newLeft = maxLeft;
+
+                            elmnt.style.top = newTop + "px";
+                            elmnt.style.left = newLeft + "px";
+                        }
+
+                        function closeDragElement() {
+                            document.onmouseup = null;
+                            document.onmousemove = null;
+                        }
+                    }
+                </script>
+            </div>
+        </div>
+    </div>
+    {% else %}
+    <div class="fs-1">This page require authentication.</div>
+    {% endif %}
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"
+        integrity="sha384-YvpcrYf0tY3lHB60NNkmXc5s9fDVZLESaAA55NDzOxhy9GkcIdslK1eN7N6jIeHz"
+        crossorigin="anonymous"></script>
+
+    <!-- <script>
+        // GPS Location Fetch
+        document.getElementById('get-location-btn').addEventListener('click', function () {
+            if (navigator.geolocation) {
+                navigator.geolocation.getCurrentPosition(
+                    function (position) {
+                        const lat = position.coords.latitude;
+                        const lon = position.coords.longitude;
+                        document.getElementById('location-input').value = `${lat}, ${lon}`;
+                    },
+                    function (error) {
+                        alert('Error getting location: ' + error.message);
+                    }
+                );
+            } else {
+                alert('Geolocation not supported by this browser.');
+            }
+        });
+
+        // File Preview
+        const fileInput = document.getElementById('file-input');
+        const viewBtn = document.getElementById('view-file-btn');
+        const previewContainer = document.getElementById('preview-container');
+        const fileTypeSelect = document.getElementById('file-type-select');
+
+        fileInput.addEventListener('change', function () {
+            const file = this.files[0];
+            if (file) {
+                // Auto-detect file type
+                const type = file.type.startsWith('image/') ? 'image' : 'video';
+                fileTypeSelect.value = type;
+
+                viewBtn.disabled = false;
+            } else {
+                viewBtn.disabled = true;
+                previewContainer.style.display = 'none';
+            }
+        });
+
+        viewBtn.addEventListener('click', function () {
+            const file = fileInput.files[0];
+            if (file) {
+                const url = URL.createObjectURL(file);
+                previewContainer.innerHTML = '';
+
+                if (file.type.startsWith('image/')) {
+                    const img = document.createElement('img');
+                    img.src = url;
+                    img.className = 'preview-img';
+                    previewContainer.appendChild(img);
+                } else if (file.type.startsWith('video/')) {
+                    const video = document.createElement('video');
+                    video.src = url;
+                    video.className = 'preview-video';
+                    video.controls = true;
+                    previewContainer.appendChild(video);
+                }
+
+                previewContainer.style.display = 'block';
+            }
+        });
+
+        // Client-side validation for required fields
+        document.getElementById('upload-form').addEventListener('submit', function (e) {
+            const areaName = document.querySelector('#id_area_name').value;
+            const pincode = document.querySelector('#id_pincode').value;
+            // Location optional, no check
+
+            if (!areaName) {
+                e.preventDefault();
+                alert('Please select an Area Name.');
+                return false;
+            }
+            if (!pincode) {
+                e.preventDefault();
+                alert('Please enter a Pincode.');
+                return false;
+            }
+        });
+    </script> -->
+</body>
+
+</html>
