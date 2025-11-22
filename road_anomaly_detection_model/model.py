@@ -3,8 +3,8 @@ os.environ['TORCH_DEVICE_BACKEND_AUTOLOAD'] = '0'
 
 import cv2
 import numpy as np
-import matplotlib.pyplot as plt
-from matplotlib.patches import Rectangle
+# import matplotlib.pyplot as plt
+# from matplotlib.patches import Rectangle
 from ultralytics import YOLO
 from pathlib import Path
 
