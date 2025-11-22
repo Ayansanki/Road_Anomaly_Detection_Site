@@ -16,7 +16,7 @@ from threading import Thread
 
 import plotly.express as px
 import plotly.io as pio
-import pandas as pd
+# import pandas as pd
 
 
 from functools import lru_cache
