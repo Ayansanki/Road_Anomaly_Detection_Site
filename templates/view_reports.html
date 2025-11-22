@@ -1,3 +1,4 @@
+{% load static %}
 <!DOCTYPE html>
 <html lang="en">
 
@@ -10,7 +11,7 @@
         rel="stylesheet" integrity="sha384-4Q6Gf2aSP4eDXB8Miphtr37CMZZQ5oXLH2yaXMJ2w8e2ZtHTl7GptT4jmndRuHDT"
         crossorigin="anonymous">
 
-    <link rel="stylesheet" href="../static/nav-style.css">
+    <link rel="stylesheet" href="{% static 'nav-style.css' %}">
 
     <style>
         .table-hover tbody tr {
@@ -109,6 +110,18 @@
 </head>
 
 <body>
+
+    {% if messages %}
+    <div class="messages mb-3">
+        {% for message in messages %}
+        <div class="alert alert-{{ message.tags }} alert-dismissible fade show" role="alert">
+            {{ message }}
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+        {% endfor %}
+    </div>
+    {% endif %}
+
     {% include "nav.html" %}
 
     <div class="container mt-4 mb-4">
