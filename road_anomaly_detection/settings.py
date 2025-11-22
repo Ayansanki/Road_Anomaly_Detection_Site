@@ -87,6 +87,11 @@ DATABASES = {
 }
 
 
+CSRF_TRUSTED_ORIGINS = [
+    "https://roadanomalydetection.onrender.com/",
+    "*"
+]
+
 
 AUTHENTICATION_BACKENDS = [
     'road_anomaly_detection_app.backend.EmailBackend',  # Path to your custom backend
