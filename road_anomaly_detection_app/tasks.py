@@ -1,6 +1,6 @@
 from road_anomaly_detection_model.model import *
 from road_anomaly_detection_app.models import RoadAnomalyReport, MediaContent, StatusTypeChoise
-from celery import shared_task
+# from celery import shared_task
 # from road_anomaly_detection import settings
 
 import logging
