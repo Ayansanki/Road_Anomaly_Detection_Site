@@ -138,7 +138,6 @@ def extract_and_classify_frames(video_path: str,max_frames: int = 10) -> List[Di
     return results
 
 
-@shared_task
 @try_except
 def data_classifier(instance: RoadAnomalyReport):
     if RoadAnomalyReport.objects.filter(pk = instance.pk):
