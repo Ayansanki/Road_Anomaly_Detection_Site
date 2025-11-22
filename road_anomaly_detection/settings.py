@@ -89,7 +89,6 @@ DATABASES = {
 
 CSRF_TRUSTED_ORIGINS = [
     "https://roadanomalydetection.onrender.com/",
-    "*"
 ]
 
 
