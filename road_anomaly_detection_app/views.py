@@ -29,7 +29,6 @@ def index(request):
         "data": {
             "total_reports": RoadAnomalyReport.objects.count(),
         }
-        # "user": request.user if request.user.is_authenticated else None,
     })
 
 def custom_404(request):
@@ -138,29 +137,34 @@ def upload_anomaly_report_page(request):
 @login_required
 @lru_cache(maxsize=8)
 def view_reports_page(request):
-    # queryset: RoadAnomalyReport = RoadAnomalyReport.objects.filter(register = f"{request.user.name} - {request.user.email}")
-    dataset: RoadAnomalyReport = RoadAnomalyReport.objects.all()
+    try:
+        dataset: RoadAnomalyReport = RoadAnomalyReport.objects.all()
     
-    # class_names = {
-    #     0: 'D00_Longitudinal_Crack',
-    #     1: 'D10_Transverse_Crack',
-    #     2: 'D20_Alligator_Crack',
-    #     3: 'D40_Pothole'
-    # }
-    df_data = [{
-                "centroid_lat": i.geolocation.get('lat'),
-                "centroid_lon": i.geolocation.get('lng'),
-                "names": i.roadname
-            } for i in dataset]
-    fig = px.scatter_map(df_data,
-                        lat="centroid_lat",
-                        lon="centroid_lon",
-                        hover_name="names",
-                        zoom=5)
-    return render(request, 'view_reports.html', context={
-        "dataset": dataset,
-        "graph" : pio.to_html(fig, full_html=False)
-    })
+        if dataset.count() == 0:
+            messages.info(request, "No reports found.")
+            return render(request, 'view_reports.html', context={
+                "dataset": dataset,
+                "graph" : ""
+            })
+        
+        df_data = [{
+                    "centroid_lat": i.geolocation.get('lat'),
+                    "centroid_lon": i.geolocation.get('lng'),
+                    "names": i.roadname
+                } for i in dataset]
+        fig = px.scatter_map(df_data,
+                            lat="centroid_lat",
+                            lon="centroid_lon",
+                            hover_name="names",
+                            zoom=5)
+        return render(request, 'view_reports.html', context={
+            "dataset": dataset,
+            "graph" : pio.to_html(fig, full_html=False)
+        })
+    except Exception as e:
+        print(e)
+        messages.error(request, "An error occurs while loading the reports.")
+        return redirect('/')
 
     
 
@@ -206,63 +210,3 @@ def report_detailed_view_page(request, report_id):
     return render(request, 'detailed_report_view.html', context={
         'data': data[0], 
     })
-
-
-
-
-
-
-
-
-# import json
-# from django.http import JsonResponse, HttpResponse
-# from django.views.decorators.http import require_POST
-# from django.views.decorators.csrf import csrf_exempt # Use this for testing, but a proper CSRF token is better for production
-
-# # If you want to use the standard CSRF protection, remove @csrf_exempt
-# # and ensure the JS sends the CSRF token (see Step 3).
-# def index(request):
-#     # return render(request, 'road_anomaly_detection_app/index.html')
-#     return HttpResponse("Road Anomaly Detection App Index Page")
-
-# def silent_form_view(request):
-#     return render(request, 'silent_form.html')
-
-# @require_POST
-# def silent_form_submit_view(request):
-#     if request.headers.get('x-requested-with') == 'XMLHttpRequest' or 'application/json' in request.META.get('CONTENT_TYPE', ''):
-#         try:
-#             # Assuming the frontend sends JSON data
-#             data = json.loads(request.body)
-#             print("Silent form submission received:", data)
-#             # Process the data (e.g., save to a model, perform an action)
-#             print(f"Received data: {data}")
-            
-#             # Example processing (replace with your logic)
-#             # form = YourForm(data)
-#             # if form.is_valid():
-#             #    form.save()
-#             #    return JsonResponse({'status': 'success', 'message': 'Form submitted successfully'})
-#             # else:
-#             #    return JsonResponse({'status': 'error', 'errors': form.errors}, status=400)
-
-#             return JsonResponse({'status': 'success', 'message': 'Data received and processed successfully', 'data': data})
-#         except json.JSONDecodeError:
-#             return JsonResponse({'status': 'error', 'message': 'Invalid JSON'}, status=400)
-    
-#     return HttpResponse("This view only accepts asynchronous POST requests.", status=400)
-
-
-    # from django.contrib import messages
-    # from django.shortcuts import redirect
-
-    # def my_view(request):
-    #     # ... some logic that might lead to an error ...
-    #     if some_error_condition:
-    #         messages.error(request, 'An error occurred during the operation.')
-    #         previous_url = request.META.get('HTTP_REFERER')
-    #         if previous_url:
-    #             return redirect(previous_url)
-    #         else:
-    #             return redirect('default_error_page')
-    #     # ... rest of your view logic ...
