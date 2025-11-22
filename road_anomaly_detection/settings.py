@@ -28,7 +28,6 @@ DEBUG = False
 ALLOWED_HOSTS = [
     'localhost',
     '*',
-    'http://127.0.0.1:8000/',
 ]
 
 
@@ -43,7 +42,6 @@ INSTALLED_APPS = [
     'django.contrib.staticfiles',
 
     'road_anomaly_detection_app',
-    'celery',
 ]
 
 MIDDLEWARE = [
@@ -158,10 +156,10 @@ MODEL_ROOT = BASE_DIR / 'road_anomaly_detection_model/models'
 # CELERY_BROKER_URL = 'http://127.0.0.1:8000/'
 # CELERY_RESULT_BACKEND = 'http://127.0.0.1:8000/'
 # set the celery broker url
-CELERY_BROKER_URL = 'redis://localhost:8000/0'
+# CELERY_BROKER_URL = 'redis://localhost:8000/0'
 
 # set the celery result backend
-CELERY_RESULT_BACKEND = 'redis://localhost:8000/0'
+# CELERY_RESULT_BACKEND = 'redis://localhost:8000/0'
 
 # set the celery timezone
-CELERY_TIMEZONE = 'UTC'
+# CELERY_TIMEZONE = 'UTC'
