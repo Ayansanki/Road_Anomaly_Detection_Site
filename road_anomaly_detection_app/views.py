@@ -3,6 +3,7 @@ from django.http import JsonResponse, HttpResponse, Http404
 from django.views.decorators.http import require_POST
 from django.views import View
 from django.contrib.auth.decorators import login_required
+from django.views.decorators.csrf import csrf_exempt, csrf_protect
 from django.contrib.auth import login, logout
 from django.contrib import messages
 
@@ -23,6 +24,8 @@ from functools import lru_cache
 
 
 # Create your views here.
+
+@csrf_exempt
 def index(request):
     print(f"View user: {request.user.email if request.user.is_authenticated else 'Anonymous'}")
     return render(request, 'home.html', context={
@@ -31,9 +34,12 @@ def index(request):
         }
     })
 
+
 def custom_404(request):
     return render(request, '404.html', status=404)
 
+
+@csrf_protect
 def sign_up(request):
     if request.method == 'POST':
         form = UserRegistrationForm(request.POST)
@@ -70,6 +76,7 @@ def sign_up(request):
     else:
         return render(request, 'signup.html')
     
+@csrf_protect
 def sign_in(request):
     if request.method == 'POST':
         form = UserLoginForm(request.POST)
@@ -98,6 +105,7 @@ def logout_user(request):
     return redirect('/')
 
 @login_required
+@csrf_protect
 def upload_anomaly_report_page(request):
     if request.method == 'POST':
         try:
